@@ -1,64 +1,24 @@
 "use client";
 
 import { ADD_POST } from "@/app/api/graphql/mutations";
-import { useFormState } from "react-dom";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { useState } from "react";
-// import { addNewPost } from "../new-post/_actions";
-import { getClient } from "@/lib/apollo-client";
 import { useMutation } from "@apollo/client";
+import { GET_POSTS } from "@/app/api/graphql/queries";
+import { useRouter } from "next/navigation";
 
 const productSchema = z.object({
   title: z.string().min(3),
   content: z.string().min(3),
 });
 
-// export async function addNewPost(formData) {
-//   const result = productSchema.safeParse(
-//     Object.fromEntries(formData.entries())
-//   );
-
-//   if (!result.success) {
-//     return {
-//       success: false,
-//       errors: result.error.formErrors.fieldErrors,
-//     };
-//   }
-
-//   const { title, content } = result?.data || {};
-
-//   const client = getClient();
-//   console.log(client);
-
-//   try {
-//     const response = await client?.mutate({
-//       mutation: ADD_POST,
-//       variables: {
-//         title,
-//         content,
-//       },
-//     });
-//     // console.log("Post added:", response.data);
-//   } catch (error) {
-//     console.error("Error adding new post:", error);
-//     return {
-//       success: false,
-//       errors: { general: "An error occurred while adding the post." },
-//     };
-//   }
-
-//   revalidatePath("posts");
-//   redirect("posts");
-// }
-
 export default function PostForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState({ title: "", content: "" });
   const [errors, setErrors] = useState({});
-  const [addPost] = useMutation(ADD_POST, {
-    variables: { title: "mut", content: "mut" },
-  });
+  const [addPost] = useMutation(ADD_POST, { refetchQueries: [GET_POSTS] });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,16 +34,23 @@ export default function PostForm() {
     form.append("title", formData.title);
     form.append("content", formData.content);
 
-    addPost();
+    const result = productSchema.safeParse(Object.fromEntries(form.entries()));
 
-    // const result = await addNewPost(form);
+    if (!result.success) {
+      setErrors(result.error.formErrors.fieldErrors);
+      return;
+    }
 
-    // if (!result.success) {
-    //   setErrors(result.errors);
-    // } else {
-    //   setFormData({ title: "", content: "" }); // Clear the form
-    //   setErrors({}); // Clear errors
-    // }
+    const { title, content } = result?.data || {};
+
+    try {
+      await addPost({ variables: { title, content } });
+      router.push("/posts");
+      // revalidatePath("/posts");
+    } catch (error) {
+      console.error("Error adding new post:", error);
+      setErrors({ general: "An error occurred while adding the post." });
+    }
   };
 
   return (
