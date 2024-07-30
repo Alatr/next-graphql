@@ -7,7 +7,7 @@ export const typeDefs = `#graphql
     content: String
     published: Boolean!
     author: User
-    authorId: String
+    authorId: String!
   }
 
   type Account {
@@ -57,7 +57,7 @@ export const typeDefs = `#graphql
   }
 
   type Mutation {
-    addPost (content:String, title:String) : Post
+    addPost (content:String, title:String, authorId:String) : Post
     updatePost(id:Int!, title:String, content:String) : Post
     deletePost(id:Int!) : Post
     addUser(novelId:Int!, name:String): User

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
 import Header from "@/components/Header";
+import { AuthWrapper } from "@/lib/auth-wrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,12 +20,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} px-10`}>
-        <ApolloWrapper>
-          <Header />
-          <main className="flex min-h-screen flex-col items-center justify-between">
-            {children}
-          </main>
-        </ApolloWrapper>
+        <AuthWrapper>
+          <ApolloWrapper>
+            <Header />
+            <main className="flex min-h-screen flex-col items-center justify-between">
+              {children}
+            </main>
+          </ApolloWrapper>
+        </AuthWrapper>
       </body>
     </html>
   );

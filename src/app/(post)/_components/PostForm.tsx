@@ -2,23 +2,29 @@
 
 import { ADD_POST } from "@/app/api/graphql/mutations";
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { GET_POSTS } from "@/app/api/graphql/queries";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const productSchema = z.object({
-  title: z.string().min(3),
-  content: z.string().min(3),
+  title: z.string().min(1),
+  content: z.string().min(1),
 });
 
 export default function PostForm() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [formData, setFormData] = useState({ title: "", content: "" });
-  const [errors, setErrors] = useState({});
-  const [addPost] = useMutation(ADD_POST, { refetchQueries: [GET_POSTS] });
+  const [errors, setErrors] = useState<{
+    title?: string[] | undefined;
+    content?: string[] | undefined;
+    general?: string;
+  }>({});
+  const [addPost] = useMutation(ADD_POST, {
+    refetchQueries: [GET_POSTS],
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,12 +36,9 @@ export default function PostForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = new FormData();
-    form.append("title", formData.title);
-    form.append("content", formData.content);
+    const form = new FormData(e.target);
 
     const result = productSchema.safeParse(Object.fromEntries(form.entries()));
-
     if (!result.success) {
       setErrors(result.error.formErrors.fieldErrors);
       return;
@@ -44,9 +47,10 @@ export default function PostForm() {
     const { title, content } = result?.data || {};
 
     try {
-      await addPost({ variables: { title, content } });
+      await addPost({
+        variables: { title, content, authorId: session?.user?.id },
+      });
       router.push("/posts");
-      // revalidatePath("/posts");
     } catch (error) {
       console.error("Error adding new post:", error);
       setErrors({ general: "An error occurred while adding the post." });

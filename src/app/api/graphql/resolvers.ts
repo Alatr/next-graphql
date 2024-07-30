@@ -32,6 +32,7 @@ export const resolvers = {
         data: {
           title: args.title,
           content: args.content,
+          authorId: args.authorId,
         },
       });
     },
