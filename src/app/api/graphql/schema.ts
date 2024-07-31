@@ -1,7 +1,7 @@
 export const typeDefs = `#graphql
 
   type Post {
-    id: Int!
+    id: ID!
     createdAt: String!
     title: String!
     content: String
@@ -52,14 +52,14 @@ export const typeDefs = `#graphql
   }
   
   type Query {
-	  post(id: Int!): Post 
+	  post(id:ID!): Post 
     posts: [Post]
   }
 
   type Mutation {
     addPost (content:String, title:String, authorId:String) : Post
-    updatePost(id:Int!, title:String, content:String) : Post
-    deletePost(id:Int!) : Post
+    updatePost(id:ID!, title:String, content:String) : Post
+    deletePost(id:ID!) : Post
     addUser(novelId:Int!, name:String): User
     deleteUser(id:Int!): User
   }

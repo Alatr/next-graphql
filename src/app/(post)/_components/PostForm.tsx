@@ -1,9 +1,9 @@
 "use client";
 
-import { ADD_POST } from "@/app/api/graphql/mutations";
+import { ADD_POST, UPDATE_POST } from "@/app/api/graphql/mutations";
 import { z } from "zod";
-import { useState } from "react";
-import { useMutation } from "@apollo/client";
+import { ChangeEvent, FormEvent, useState } from "react";
+import { QueryRef, useMutation, useReadQuery } from "@apollo/client";
 import { GET_POSTS } from "@/app/api/graphql/queries";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -13,20 +13,31 @@ const productSchema = z.object({
   content: z.string().min(1),
 });
 
-export default function PostForm() {
+type PostFormWrapperProps = { queryRef: QueryRef };
+type PostFormProps = { post: any };
+type IFormErrors = {
+  title?: string[] | undefined;
+  content?: string[] | undefined;
+  general?: string;
+};
+
+export function PostFormWrapper({ queryRef }: PostFormWrapperProps) {
+  const { data: post } = useReadQuery(queryRef);
+  return <PostForm post={post?.post} />;
+}
+
+export default function PostForm({ post = null }: PostFormProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const [formData, setFormData] = useState({ title: "", content: "" });
-  const [errors, setErrors] = useState<{
-    title?: string[] | undefined;
-    content?: string[] | undefined;
-    general?: string;
-  }>({});
-  const [addPost] = useMutation(ADD_POST, {
-    refetchQueries: [GET_POSTS],
-  });
+  const action = useFormAction(post);
 
-  const handleChange = (e) => {
+  const [formData, setFormData] = useState({
+    title: post?.title,
+    content: post?.content,
+  });
+  const [errors, setErrors] = useState<IFormErrors>({});
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -34,27 +45,31 @@ export default function PostForm() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = new FormData(e.target);
-
+    const form = new FormData(e.currentTarget);
     const result = productSchema.safeParse(Object.fromEntries(form.entries()));
+
     if (!result.success) {
       setErrors(result.error.formErrors.fieldErrors);
       return;
     }
 
     const { title, content } = result?.data || {};
+    const actionData = {
+      title,
+      content,
+      id: post?.id,
+      authorId: session?.user?.id,
+    };
 
-    try {
-      await addPost({
-        variables: { title, content, authorId: session?.user?.id },
+    action(actionData)
+      .then(() => {
+        router.push("/posts");
+      })
+      .catch((error) => {
+        setErrors({ general: error.message });
       });
-      router.push("/posts");
-    } catch (error) {
-      console.error("Error adding new post:", error);
-      setErrors({ general: "An error occurred while adding the post." });
-    }
   };
 
   return (
@@ -85,7 +100,7 @@ export default function PostForm() {
         >
           Content
         </label>
-        <textarea
+        <input
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="content"
           name="content"
@@ -104,9 +119,43 @@ export default function PostForm() {
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="submit"
         >
-          Add Post
+          {post ? "Update Post" : "Add Post"}
         </button>
       </div>
     </form>
   );
+}
+
+function useFormAction(post: any) {
+  const [addPost] = useMutation(ADD_POST, {
+    refetchQueries: [{ query: GET_POSTS }],
+    awaitRefetchQueries: true,
+  });
+  const [updatePost] = useMutation(UPDATE_POST, {
+    refetchQueries: [{ query: GET_POSTS }],
+    awaitRefetchQueries: true,
+  });
+  const handleCreateNewPost = async (data) => {
+    try {
+      await addPost({
+        variables: data,
+      });
+    } catch (error) {
+      throw new Error("An error occurred while adding the post.", {
+        cause: error,
+      });
+    }
+  };
+  const handleUpdatePost = async (data) => {
+    try {
+      await updatePost({
+        variables: data,
+      });
+    } catch (error) {
+      throw new Error("An error occurred while updating the post.", {
+        cause: error,
+      });
+    }
+  };
+  return post ? handleUpdatePost : handleCreateNewPost;
 }

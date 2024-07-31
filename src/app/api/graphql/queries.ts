@@ -15,7 +15,7 @@ export const GET_POSTS = gql`
 `;
 
 export const GET_POST = gql`
-  query Post($id: Int!) {
+  query Post($id: ID!) {
     post(id: $id) {
       id
       content

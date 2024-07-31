@@ -5,14 +5,14 @@ export const resolvers = {
     post: async (_parent: any, args: any, context: DBContext) => {
       return await context.db.post.findUnique({
         where: {
-          id: args.id,
+          id: Number(args.id),
         },
       });
     },
     posts: async (_parent: any, _args: any, context: DBContext) => {
       try {
         return await context.db.post.findMany();
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error fetching posts: ${error.message}`);
       }
     },
@@ -39,7 +39,7 @@ export const resolvers = {
     updatePost: async (_parent: any, args: any, context: DBContext) => {
       return await context.db.post.update({
         where: {
-          id: args.id,
+          id: Number(args.id),
         },
         data: {
           title: args.title,
@@ -50,7 +50,7 @@ export const resolvers = {
     deletePost: async (_parent: any, args: any, context: DBContext) => {
       return await context.db.post.delete({
         where: {
-          id: args.id,
+          id: Number(args.id),
         },
       });
     },

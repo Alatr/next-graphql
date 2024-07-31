@@ -19,11 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} px-10`}>
+      <body className={`${inter.className} `}>
         <AuthWrapper>
           <ApolloWrapper>
             <Header />
-            <main className="flex min-h-screen flex-col items-center justify-between">
+            <main className="px-10 flex min-h-screen flex-col items-center justify-between">
               {children}
             </main>
           </ApolloWrapper>

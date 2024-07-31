@@ -5,12 +5,19 @@ import {
   InMemoryCache,
 } from "@apollo/experimental-nextjs-app-support";
 
+// import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
+
+// if (process.env.NODE_ENV !== "production") {
+//   // Adds messages only in a dev environment
+//   loadDevMessages();
+//   loadErrorMessages();
+// }
+
 export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
   return new ApolloClient({
     cache: new InMemoryCache(),
     link: new HttpLink({
       // this needs to be an absolute url, as relative urls cannot be used in SSR
-      // uri: "http://example.com/api/graphql",
       uri: "http://localhost:3000/api/graphql",
 
       // you can disable result caching here if you want to
