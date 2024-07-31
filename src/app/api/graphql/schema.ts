@@ -1,5 +1,6 @@
-export const typeDefs = `#graphql
+import { gql } from "@apollo/client";
 
+export const typeDefs = gql`
   type Post {
     id: ID!
     createdAt: String!
@@ -50,18 +51,15 @@ export const typeDefs = `#graphql
     token: String!
     expires: String!
   }
-  
+
   type Query {
-	  post(id:ID!): Post 
+    post(id: ID!): Post
     posts: [Post]
   }
 
   type Mutation {
-    addPost (content:String, title:String, authorId:String) : Post
-    updatePost(id:ID!, title:String, content:String) : Post
-    deletePost(id:ID!) : Post
-    addUser(novelId:Int!, name:String): User
-    deleteUser(id:Int!): User
+    addPost(content: String, title: String, authorId: String): Post
+    updatePost(id: ID!, title: String, content: String): Post
+    deletePost(id: ID!): Post
   }
-
 `;

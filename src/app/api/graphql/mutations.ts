@@ -30,25 +30,3 @@ export const UPDATE_POST = gql`
     }
   }
 `;
-
-// rewrite below
-
-export const ADD_USER = gql`
-  mutation Mutation($novelId: ID!, $name: String) {
-    addAuthor(novelId: $novelId, name: $name) {
-      id
-      name
-      novelId
-    }
-  }
-`;
-
-export const DELETE_USER = gql`
-  mutation Mutation($id: ID!) {
-    deleteAuthor(id: $id) {
-      id
-      name
-      novelId
-    }
-  }
-`;

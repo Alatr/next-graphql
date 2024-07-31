@@ -54,21 +54,5 @@ export const resolvers = {
         },
       });
     },
-
-    addUser: async (_parent: any, args: any, context: DBContext) => {
-      return await context.db.user.create({
-        data: {
-          id: args.id,
-          name: args.name,
-        },
-      });
-    },
-    deleteUser: async (_parent: any, args: any, context: DBContext) => {
-      return await context.db.user.delete({
-        where: {
-          id: args.id,
-        },
-      });
-    },
   },
 };

@@ -7,14 +7,15 @@ import { QueryRef, useMutation, useReadQuery } from "@apollo/client";
 import { GET_POSTS } from "@/app/api/graphql/queries";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Post, PostQuery } from "@/__generated__/graphql";
 
 const productSchema = z.object({
   title: z.string().min(1),
   content: z.string().min(1),
 });
 
-type PostFormWrapperProps = { queryRef: QueryRef };
-type PostFormProps = { post: any };
+type PostFormWrapperProps = { queryRef: QueryRef<PostQuery> };
+type PostFormProps = { post: PostQuery["post"] };
 type IFormErrors = {
   title?: string[] | undefined;
   content?: string[] | undefined;
@@ -22,18 +23,18 @@ type IFormErrors = {
 };
 
 export function PostFormWrapper({ queryRef }: PostFormWrapperProps) {
-  const { data: post } = useReadQuery(queryRef);
+  const { data: post } = useReadQuery<PostQuery>(queryRef);
   return <PostForm post={post?.post} />;
 }
 
-export default function PostForm({ post = null }: PostFormProps) {
+export default function PostForm({ post }: PostFormProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const action = useFormAction(post);
 
   const [formData, setFormData] = useState({
     title: post?.title,
-    content: post?.content,
+    content: post?.content as string | undefined,
   });
   const [errors, setErrors] = useState<IFormErrors>({});
 
@@ -135,7 +136,7 @@ function useFormAction(post: any) {
     refetchQueries: [{ query: GET_POSTS }],
     awaitRefetchQueries: true,
   });
-  const handleCreateNewPost = async (data) => {
+  const handleCreateNewPost = async <T extends object>(data: T) => {
     try {
       await addPost({
         variables: data,
@@ -146,7 +147,7 @@ function useFormAction(post: any) {
       });
     }
   };
-  const handleUpdatePost = async (data) => {
+  const handleUpdatePost = async <T extends object>(data: T) => {
     try {
       await updatePost({
         variables: data,
